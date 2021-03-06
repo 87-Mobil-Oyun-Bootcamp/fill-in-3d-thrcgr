@@ -10,6 +10,8 @@ public class LevelManager : MonoBehaviour
     public Animator anim;
 
     public static LevelManager Instance => instance;
+    public static event Action OnFilledCubeAmountChanged;
+    public static event Action<int> OnGameFinished;
 
     public Action LevelCompleted;
 
@@ -49,40 +51,37 @@ public class LevelManager : MonoBehaviour
     public int filledCubeCount;
     [HideInInspector]
     public int maxStartedCubeAmount = 1;
-    public float NormalizedStartedFillAmount() => (float)filledCubeCount / maxStartedCubeAmount;
 
+    public int nextLevelIndex;
     public bool levelFinish;
 
     private void Awake()
     {
-
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(this);
+            // DontDestroyOnLoad(this);
         }
         else
         {
             Destroy(gameObject);
         }
+
         fillAreaSpawner = GetComponent<FillAreaSpawner>();
 
-
+        StartCube.OnCubeDestroyed += OnCubeDestroyed;
     }
-    
+
+    void OnDestroy()
+    {
+        StartCube.OnCubeDestroyed -= OnCubeDestroyed;
+    }
+
     private bool _one;
+
     private void Update()
     {
-        for (int i = 0; i < startedCubes.Count; i++)
-        {
-            if (startedCubes[i].isDestroyed == true)
-            {
-                startedCubes.Remove(startedCubes[i]);
-                filledCubeCount++;
-            }
-        }
-
-        if (Input.GetKeyDown(KeyCode.O)||(!_one && startedCubes.Count<=0))
+        if (Input.GetKeyDown(KeyCode.O) || (!_one && startedCubes.Count <= 0))
         {
             _one = true;
             anim.SetBool("isFinished", true); // todo Renklenen kupler yeni bi gameobject altina child olacak(transform.SetParent()) parent obje animasyon oynayacak. 
@@ -92,29 +91,39 @@ public class LevelManager : MonoBehaviour
         if (levelFinish && Input.GetMouseButtonDown(0))
         {
             EndGameAnim();
-            _counter += .25f; // todo hepsi bir anda dokulebilir index hatasi aliyoruz bucuklu sayilar kaldigi icin yada tam sayiya yuvarlamak gerekir for dongusunde.
         }
-
-
     }
-    
+
+    void OnCubeDestroyed()
+    {
+        filledCubeCount++;
+        OnFilledCubeAmountChanged?.Invoke();
+    }
+
+    public float NormalizedStartedFillAmount() => (float)filledCubeCount / maxStartedCubeAmount;
+
     private float _counter;
+
     void EndGameAnim()
     {
-        for (int i = 0; i < endGameCubes.Count * _counter; i++)
+        for (int i = 0; i < endGameCubes.Count; i++)
         {
             endGameCubes[i].GetComponent<Rigidbody>().isKinematic = false;
             endGameCubes[i].GetComponent<Rigidbody>().useGravity = true;
             endGameCubes[i].GetComponent<BoxCollider>().isTrigger = false;
             endGameCubes[i].GetComponent<BoxCollider>().enabled = true;
             endGameCubes[i].gameObject.transform.parent = null;
+
             endGameCubes.Remove(endGameCubes[i]); // todo  dagilan objelerin yeni levele baslamadan once destroylanmasi lazim. Maybe Ground OnCollisionEnter.
-            if (endGameCubes.Count<=0)
+
+            if (endGameCubes.Count <= 0)
             {
-                levelFinish = false;
+                Debug.Log("Finished");
+                OnGameFinished?.Invoke(nextLevelIndex);
             }
         }
     }
+
     public bool HandleCreateNextLevel()
     {
         ++currentLevelIndex;
@@ -131,6 +140,7 @@ public class LevelManager : MonoBehaviour
     void CreateNextLevel()
     {
         blocksFromImage = fillAreaSpawner.CreateBlockFromImage(levelInfoAsset.levelInfos[currentLevelIndex - 1], fillAreaContainer);
+        maxStartedCubeAmount = blocksFromImage.Count;
         CreateBlocks();
         CubeSpawner();
     }
@@ -159,7 +169,6 @@ public class LevelManager : MonoBehaviour
                     tmpCube.GetComponent<Collider>().enabled = false;
                     tmpCube.transform.position = new Vector3(xOffset - modIndex * 0.35f, yOffset + modCounter * 0.5f, zOffset);
                     startedCubes2.Add(tmpCube);
-                    maxStartedCubeAmount = startedCubes.Count;
                 }
                 break;
 
@@ -177,20 +186,45 @@ public class LevelManager : MonoBehaviour
                             {
                                 StartCube tmpCube2 = Instantiate(startCube, startCubeTransform);
                                 tmpCube2.GetComponent<Collider>().enabled = false;
-                                tmpCube2.transform.position = new Vector3(x * .305f, height *.305f , -4 - z * .305f);
-                                startedCubes2.Add(tmpCube2); 
-                                maxStartedCubeAmount = startedCubes.Count;
+                                tmpCube2.transform.position = new Vector3(x * .305f, height * .305f, -4 - z * .305f);
+                                startedCubes2.Add(tmpCube2);
                             }
                         }
                     }
                 }
+                break;
+            case 3:
+                int fillSize = 10;
+                float innerRadius = 3;
+                float thickness = 3;
+
+                for (int i = -fillSize; i < fillSize; i++)
+                {
+                    for (int j = -fillSize; j < fillSize; j++)
+                    {
+                        for (int k = -fillSize; k < fillSize; k++)
+                        {
 
 
+                            Vector3 cubePosition = new Vector3(i, j, k);
+                            Vector3 cubeDirection = new Vector3(cubePosition.x, 0, cubePosition.z);
+                            cubeDirection.Normalize();
+                            Vector3 donutCenter = cubeDirection * (innerRadius + thickness);
+
+
+                            if (Vector3.Distance(cubePosition, donutCenter) < thickness)
+                            {
+                                StartCube tmpCube3 = Instantiate(startCube, startCubeTransform);
+                                tmpCube3.transform.position = new Vector3(i * .325f, (.3f * thickness) - .15f + j * .325f, -4 - k * .325f);
+                                startedCubes2.Add(tmpCube3);
+                            }
+
+                        }
+                    }
+                }
                 break;
 
         }
-
-
     }
 
     private void CubeSpawner()
@@ -211,11 +245,10 @@ public class LevelManager : MonoBehaviour
             modCounter = modCounter % 10;
 
             StartCube tmpCube = Instantiate(startCube, startCubeTransform);
-           
-            tmpCube.GetComponent<MeshRenderer>().enabled = false;        
+
+            tmpCube.GetComponent<MeshRenderer>().enabled = false;
             tmpCube.transform.position = new Vector3(xOffset - modIndex * 0.35f, yOffset + modCounter * 0.5f, zOffset);
             startedCubes.Add(tmpCube);
-            maxStartedCubeAmount = startedCubes.Count;
         }
     }
 
@@ -225,11 +258,13 @@ public class LevelManager : MonoBehaviour
         {
             Destroy(startedCubes2[i].gameObject);
         }
+
         for (int i = 0; i < startedCubes.Count; i++)
         {
             if (startedCubes[i].rb != null)
                 startedCubes[i].GetComponent<MeshRenderer>().enabled = true;
-                startedCubes[i].rb.isKinematic = false;
+
+            startedCubes[i].rb.isKinematic = false;
             startedCubes[i].GetComponent<Collider>().enabled = true;
         }
     }

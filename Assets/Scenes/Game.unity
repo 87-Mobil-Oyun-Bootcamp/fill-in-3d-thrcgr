@@ -885,7 +885,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -72.099976}
+  m_AnchoredPosition: {x: 0, y: -72.1001}
   m_SizeDelta: {x: 631.3, y: 206.72998}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &507242771
@@ -1502,13 +1502,14 @@ MonoBehaviour:
   fillAreaSpawner: {fileID: 0}
   blocksFromImage: []
   startedCubes: []
+  startedCubes2: []
+  startedCubes3: []
   endGameCubes: []
   startCubeTransform: {fileID: 1701890654}
-  startCubes: {fileID: 3001984431832823633, guid: 8bbae5991edfc6c4ebe45b58fb996fa4,
-    type: 3}
-  startCubeShapes: 1
+  startCubeShapes: 3
   filledCubeCount: 0
   maxStartedCubeAmount: 1
+  levelFinish: 0
 --- !u!114 &896300765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1793,7 +1794,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -72.099976}
+  m_AnchoredPosition: {x: 0, y: -72.1001}
   m_SizeDelta: {x: 631.3, y: 206.72998}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1081528687

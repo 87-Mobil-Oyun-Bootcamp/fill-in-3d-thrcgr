@@ -5,12 +5,17 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float speed;
-    public FixedJoystick veriableJoystick;
+    private FixedJoystick veriableJoystick;
 
     public Rigidbody rb;
 
 
     Quaternion targetRotation;
+
+    private void Awake()
+    {
+        veriableJoystick = FindObjectOfType<FixedJoystick>();
+    }
 
     void FixedUpdate()
     {
