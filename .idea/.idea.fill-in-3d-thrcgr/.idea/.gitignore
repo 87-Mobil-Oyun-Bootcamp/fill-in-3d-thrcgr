@@ -1,0 +1,13 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/contentModel.xml
+/projectSettingsUpdater.xml
+/.idea.fill-in-3d-thrcgr.iml
+/modules.xml
+# Datasource local storage ignored files
+/../../../../../../:\KDLYRZ\fill-in-3d-thrcgr\.idea\.idea.fill-in-3d-thrcgr\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
